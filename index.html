@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jeu de devinette de mot de passe</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    text-align: center;
+  }
+  input[type="text"] {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    width: 300px;
+  }
+  #status {
+    margin-top: 1.5rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+    min-height: 1.5em;
+  }
+  #bruteforceAlert {
+    margin-top: 1em;
+    color: red;
+    font-weight: bold;
+  }
+  #attempts {
+    margin-top: 0.8em;
+    font-size: 1.1rem;
+  }
+  label, button {
+    font-size: 1.1rem;
+  }
+  #sliderVal {
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>Devine le mot de passe généré</h1>
+
+<label for="difficulty">Difficulté : <span id="sliderVal">10</span></label><br/>
+<input type="range" id="difficulty" min="1" max="100" value="10" /><br/><br/>
+
+<button id="generateBtn">Générer un mot de passe</button>
+
+<br/><br/>
+
+<input type="text" id="guessInput" placeholder="Tape ta proposition ici" disabled />
+
+<div id="status"></div>
+<div id="attempts"></div>
+<div id="bruteforceAlert"></div>
+
+<script>
+  const slider = document.getElementById('difficulty');
+  const sliderVal = document.getElementById('sliderVal');
+  const generateBtn = document.getElementById('generateBtn');
+  const guessInput = document.getElementById('guessInput');
+  const status = document.getElementById('status');
+  const bfAlert = document.getElementById('bruteforceAlert');
+  const attemptsDiv = document.getElementById('attempts');
+
+  sliderVal.textContent = slider.value;
+
+  slider.addEventListener('input', () => {
+    sliderVal.textContent = slider.value;
+  });
+
+  let password = '';
+  let bruteforceDetected = false;
+  let attemptsCount = 0;
+
+  function generatePassword(difficulty) {
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    const lettersUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const symbols = '!@#$%^&*()-_=+[]{}';
+
+    let chars = letters;
+    let length = 4 + Math.floor(difficulty / 10);
+
+    if (difficulty > 30) chars += lettersUpper;
+    if (difficulty > 50) chars += digits;
+    if (difficulty > 75) chars += symbols;
+
+    let pass = '';
+    for (let i = 0; i < length; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return pass;
+  }
+
+  let changeTimes = [];
+
+  function getLevel(attempts) {
+    if (attempts < 10) return 'Débutant';
+    if (attempts < 30) return 'Intermédiaire';
+    if (attempts < 60) return 'Avancé';
+    return 'Expert';
+  }
+
+  guessInput.addEventListener('input', () => {
+    if (bruteforceDetected) return;
+
+    const now = Date.now();
+    changeTimes.push(now);
+    changeTimes = changeTimes.filter(t => now - t <= 1000);
+
+    if (changeTimes.length > 5 && !bruteforceDetected) {
+      bruteforceDetected = true;
+      bfAlert.textContent = "Vous utilisez un bruteforceur, c’est pas juste ;-;";
+      status.textContent = '';
+      attemptsDiv.textContent = '';
+      return;
+    }
+
+    attemptsCount++;
+    attemptsDiv.textContent = `Nombre d'essais : ${attemptsCount} — Niveau : ${getLevel(attemptsCount)}`;
+
+    if (guessInput.value === password) {
+      // Supprime tout le contenu et affiche BRAVO
+      document.body.innerHTML = '<h1 style="font-size:5rem; color:green; margin-top:20vh;">BRAVO 🎉</h1>';
+    } else {
+      status.textContent = "Ce n’est pas encore ça...";
+    }
+  });
+
+  generateBtn.addEventListener('click', () => {
+    bruteforceDetected = false;
+    bfAlert.textContent = '';
+    changeTimes = [];
+    attemptsCount = 0;
+    password = generatePassword(parseInt(slider.value, 10));
+    guessInput.value = '';
+    guessInput.disabled = false;
+    guessInput.focus();
+    status.textContent = `Mot de passe généré ! Essaie de le deviner :) (longueur : ${password.length})`;
+    attemptsDiv.textContent = '';
+    console.log("Mot de passe généré (à deviner) :", password);
+  });
+</script>
+
+</body>
+</html>
