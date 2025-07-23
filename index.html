@@ -110,7 +110,7 @@
     changeTimes.push(now);
     changeTimes = changeTimes.filter(t => now - t <= 1000);
 
-    if (changeTimes.length > 5 && !bruteforceDetected) {
+    if (changeTimes.length > 20 && !bruteforceDetected) {
       bruteforceDetected = true;
       bfAlert.textContent = "Vous utilisez un bruteforceur, c’est pas juste ;-;";
       status.textContent = '';
